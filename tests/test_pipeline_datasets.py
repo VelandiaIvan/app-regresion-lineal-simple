@@ -273,3 +273,31 @@ def test_bank_cleaning_improves_reliability():
              .add("impute", "score_crediticio", "median").add("impute", "deuda_vigente_millones", "median"))
     _, _, nv = _run(BANCA, xs, include_transforms=False, plan=naive)
     assert nv.models["ingreso_mensual_millones"].res.r2 < best.res.r2 - 0.1
+
+
+# ============================================================================ modo automático (sin ningún texto del usuario)
+def test_auto_mode_without_any_user_text():
+    from core import auto
+    aciertos = 0
+    for key, (_, fn, _) in G.DATASETS.items():
+        df = fn()
+        y, _ = auto.suggest_target(df)                      # cero contexto: solo los datos
+        aciertos += y == G.CONTEXTS[key]["y"]
+        plan, why = auto.auto_plan(df, y, G.CONTEXTS[key]["date"])
+        assert why                                          # siempre explica lo que hizo
+        md = prepare_modeling_data(df, plan, y, SplitSpec(date_col=G.CONTEXTS[key]["date"]))
+        xs, rank = auto.suggest_predictors(md)
+        assert xs and y not in xs
+        assert not set(xs) & set(rank.loc[rank["riesgo_fuga"] == "alta", "variable"])   # nunca sugiere variables con fuga
+    assert aciertos >= 8                                    # «gemelos» (ventas/ingresos netos, aprobado/desembolsado) resueltos
+
+
+def test_auto_plan_cleans_known_problems():
+    from core import auto
+    df = G.DATASETS["Banca · monto de crédito aprobado (1000 registros)"][1]()
+    plan, why = auto.auto_plan(df, "monto_aprobado_millones", "fecha_desembolso")
+    kinds = {(s.kind, s.column) for s in plan.steps}
+    assert ("drop_duplicates", None) in kinds and ("fix_nan", "ingreso_mensual_millones") in kinds
+    assert not any(s.kind == "impute" and s.column == "monto_aprobado_millones" for s in plan.steps)   # Y nunca se imputa
+    out = cleaning.apply_plan(df, plan, protect=["monto_aprobado_millones"]).df
+    assert out.duplicated().sum() == 0 and (out["ingreso_mensual_millones"].dropna() > 0).all()

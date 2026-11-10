@@ -20,7 +20,12 @@ sys.path.insert(0, r"{ROOT}")
 import streamlit as st
 from ui import state
 state.init()
-importlib.import_module("ui." + st.session_state["_page"]).render()
+p = st.session_state["_page"]
+if p.startswith("s"):
+    from ui import simple
+    getattr(simple, p)()
+else:
+    importlib.import_module("ui." + p).render()
 '''
 
 
@@ -96,3 +101,31 @@ def test_second_split_mode_and_confidence_levels():
     for page in ORDER[5:]:
         _go(at, page)
     assert at.session_state["cmp"].md.spec.method == "temporal"
+
+
+SIMPLE = ["s1_datos", "s2_variables", "s3_modelo", "s4_simular", "s5_informe"]
+
+
+@pytest.mark.parametrize("sample", list(G.DATASETS))
+def test_simple_mode_walkthrough(sample):
+    """Modo sencillo: cargar ejemplo y recorrer los 5 pasos sin tocar nada más."""
+    at = AppTest.from_string(SCRIPT, default_timeout=180)
+    at.session_state["_page"] = "s1_datos"
+    at.run()
+    at.selectbox(key="sample_sel").set_value(sample)
+    [b for b in at.button if b.label == "Cargar ejemplo"][0].click().run()
+    assert not at.exception, [e.value for e in at.exception]
+    for page in SIMPLE:
+        _go(at, page)
+    ss = at.session_state
+    assert ss["y"] == G.CONTEXTS[sample]["y"]                 # con el contexto del ejemplo, Y correcta
+    assert ss["x_cands"] and ss["cmp"] is not None and len(ss.plan) >= 0
+    assert all(m.leak != "alta" for m in ss["cmp"].models.values())
+
+
+def test_simple_mode_without_data_guides_user():
+    at = AppTest.from_string(SCRIPT, default_timeout=60)
+    for page in SIMPLE[1:]:
+        at.session_state["_page"] = page
+        at.run()
+        assert not at.exception

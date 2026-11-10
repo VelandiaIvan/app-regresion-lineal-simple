@@ -26,7 +26,21 @@ python -m pip install -r requirements-dev.txt         # una sola vez
 python -m pytest tests -q                             # pruebas automáticas
 ```
 
-## Los 13 módulos
+## Modo sencillo (por defecto): 5 pasos
+
+Pensado para uso académico: no hay que saber nada del negocio ni llenar formularios. La app **detecta y sugiere todo** y el usuario solo confirma.
+
+| Paso | Qué hace la app automáticamente |
+|---|---|
+| 1 · Datos | Carga un ejemplo o su archivo; revisa la calidad y explica qué corrigió (repetidos, valores imposibles, faltantes). |
+| 2 · Variables | Sugiere la variable a estimar (Y) y las que la explican (X); descarta las que serían «trampa» (fuga). Todo se puede cambiar. |
+| 3 · Resultado | Prueba un modelo por variable, elige el mejor con datos nuevos y lo explica en palabras sencillas. |
+| 4 · Simular | Deslizador «¿qué pasa si…?» y cambios de ±5 % / ±10 %. |
+| 5 · Informe | Informe descargable. |
+
+El interruptor **«Modo experto»** de la barra lateral muestra los 13 módulos completos descritos abajo. La lógica automática está en `core/auto.py` y la interfaz sencilla en `ui/simple.py`.
+
+## Los 13 módulos (modo experto)
 
 | # | Módulo | Qué hace |
 |---|---|---|

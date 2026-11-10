@@ -64,6 +64,7 @@ def reset_analysis() -> None:
     ss.cmp_sig = None
     ss.chosen = None
     ss._prev_sig = ss._md_sig = None
+    ss["_auto_data"] = ss["_auto_y"] = None          # el modo sencillo vuelve a detectar todo
 
 
 def set_loaded(res: loader.LoadResult, name: str) -> None:

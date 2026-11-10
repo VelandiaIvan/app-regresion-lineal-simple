@@ -32,9 +32,9 @@ def _base(fig: go.Figure, title: str | None = None, height: int = 380, x_title: 
           y_title: str | None = None, legend: bool = True) -> go.Figure:
     fig.update_layout(
         template=None, paper_bgcolor=SURFACE, plot_bgcolor=SURFACE, height=height,
-        font=dict(family=FONT, size=12, color=INK2), margin=dict(l=56, r=24, t=48 if title else 24, b=48),
+        font=dict(family=FONT, size=12, color=INK2), margin=dict(l=56, r=24, t=48 if title else 24, b=110 if legend else 48),
         title=dict(text=title, x=0.01, font=dict(size=14, color=INK)) if title else None,
-        legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0, bgcolor="rgba(0,0,0,0)", font=dict(color=INK2)),
+        legend=dict(orientation="h", yanchor="top", y=-0.2, x=0, bgcolor="rgba(0,0,0,0)", font=dict(color=INK2)),  # debajo: no tapa el título
         showlegend=legend, hoverlabel=dict(bgcolor="#ffffff", font=dict(family=FONT, color=INK, size=12), bordercolor=BASE),
         hovermode="closest",
     )

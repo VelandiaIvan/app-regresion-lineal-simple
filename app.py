@@ -37,7 +37,15 @@ MODULES = [
     ("m12_informe", "12 · Informe ejecutivo"),
     ("m13_aprendizaje", "13 · Centro de aprendizaje"),
 ]
-LABELS = dict(MODULES)
+SIMPLE = [
+    ("s1_datos", "1 · Datos"),
+    ("s2_variables", "2 · Variables"),
+    ("s3_modelo", "3 · Resultado"),
+    ("s4_simular", "4 · Simular"),
+    ("s5_informe", "5 · Informe"),
+    ("m13_aprendizaje", "📚 Aprende"),
+]
+LABELS = {**dict(MODULES), **dict(SIMPLE)}
 
 
 def done(key: str) -> bool:
@@ -56,21 +64,38 @@ def done(key: str) -> bool:
         "m11_sensibilidad": "m11_sensibilidad" in ss.visited,
         "m12_informe": "m12_informe" in ss.visited,
         "m13_aprendizaje": "m13_aprendizaje" in ss.visited,
+        "s1_datos": state.has_data(),
+        "s2_variables": bool(ss.y) and bool(ss.x_cands) and "s2_variables" in ss.visited,
+        "s3_modelo": "s3_modelo" in ss.visited,
+        "s4_simular": "s4_simular" in ss.visited,
+        "s5_informe": "s5_informe" in ss.visited,
     }[key]
 
 
+def _switch_mode() -> None:
+    lst = MODULES if ss.expert else SIMPLE
+    if ss.get("nav") not in dict(lst):
+        ss["nav"] = lst[0][0]
+
+
 ss = st.session_state
+ss.setdefault("expert", False)
 if "nav" not in ss:
-    ss["nav"] = MODULES[0][0]
+    ss["nav"] = SIMPLE[0][0]
+NAV = MODULES if ss.expert else SIMPLE
+if ss["nav"] not in dict(NAV):
+    ss["nav"] = NAV[0][0]
 
 with st.sidebar:
     st.markdown("### 📈 Regresión lineal simple")
     st.caption("Asistente de ciencia de datos · modelar, estimar y decidir")
-    st.radio("Módulos", [k for k, _ in MODULES], key="nav",
+    st.radio("Pasos", [k for k, _ in NAV], key="nav",
              format_func=lambda k: f"{'✅' if done(k) else '○'}  {LABELS[k]}", label_visibility="collapsed")
     st.divider()
-    st.selectbox("Nivel de confianza de los intervalos", [90, 95, 99], key="conf", format_func=lambda v: f"{v}%")
-    with st.expander("Etiquetas de unidades (opcional)"):
+    st.toggle("Modo experto (13 módulos)", key="expert", on_change=_switch_mode,
+              help="Muestra todos los controles: contexto de negocio, limpieza manual, análisis exploratorio, diagnóstico detallado…")
+    with st.expander("Opciones"):
+        st.selectbox("Nivel de confianza de los intervalos", [90, 95, 99], key="conf", format_func=lambda v: f"{v}%")
         ss.units["y"] = st.text_input("Unidad de Y", ss.units.get("y", ""), placeholder="p. ej. millones de pesos")
         ss.units["x"] = st.text_input("Unidad de X", ss.units.get("x", ""), placeholder="p. ej. km")
     if state.has_data():
@@ -83,5 +108,8 @@ with st.sidebar:
 
 key = ss["nav"]
 ss.visited.add(key)
-module = importlib.import_module(f"ui.{key}")
-module.render()
+if key.startswith("s"):
+    from ui import simple
+    getattr(simple, key)()
+else:
+    importlib.import_module(f"ui.{key}").render()
