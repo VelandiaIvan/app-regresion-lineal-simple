@@ -1,0 +1,23 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+*.egg-info/
+
+# --- Streamlit: NUNCA suba secretos ---
+.streamlit/secrets.toml
+.env
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Reglas heredadas del proyecto web (frontend / backend) ---
+frontend/node_modules/
+frontend/.next/
+backend/venv/
+backend/__pycache__/
